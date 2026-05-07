@@ -3,390 +3,155 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Daily Reports</title>
     <style>
-        .json-block {
+        :root {
+            --bg-1: #f4fbf8;
+            --bg-2: #ecf1ff;
+            --card: #ffffff;
+            --text: #17202a;
+            --muted: #5f6a72;
+            --accent: #0b8f6f;
+            --accent-2: #2455d6;
+            --shadow: 0 10px 25px rgba(20, 30, 50, 0.08);
+            --radius: 16px;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
             margin: 0;
-            padding: 12px 16px;
-            border: 1px solid #d0d7de;
-            border-radius: 8px;
-            background: #f6f8fa;
-            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-            font-size: 12px;
-            line-height: 1.4;
-            white-space: pre;
-            overflow-x: auto;
+            min-height: 100vh;
+            font-family: "Avenir Next", "Segoe UI", sans-serif;
+            color: var(--text);
+            background:
+                radial-gradient(circle at 15% 20%, rgba(11, 143, 111, 0.18), transparent 30%),
+                radial-gradient(circle at 85% 0%, rgba(36, 85, 214, 0.16), transparent 34%),
+                linear-gradient(160deg, var(--bg-1), var(--bg-2));
+            display: grid;
+            place-items: center;
+            padding: 24px;
+        }
+
+        main {
+            width: min(920px, 100%);
+        }
+
+        .panel {
+            background: rgba(255, 255, 255, 0.82);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            border-radius: 24px;
+            box-shadow: var(--shadow);
+            padding: 32px;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: clamp(1.8rem, 2.2vw, 2.5rem);
+            letter-spacing: 0.3px;
+        }
+
+        .today {
+            margin-top: 8px;
+            color: var(--muted);
+            font-size: 1rem;
+        }
+
+        .days-grid {
+            margin-top: 24px;
+            display: grid;
+            gap: 14px;
+            grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+        }
+
+        .day-link {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .day-card {
+            background: var(--card);
+            border: 1px solid #dce4f3;
+            border-radius: var(--radius);
+            padding: 18px;
+            display: grid;
+            gap: 6px;
+            transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+        }
+
+        .day-link:hover .day-card,
+        .day-link:focus-visible .day-card {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 24px rgba(20, 30, 50, 0.12);
+            border-color: #b9c8ea;
+        }
+
+        .day-name {
+            font-size: 1.05rem;
+            font-weight: 650;
+            text-transform: capitalize;
+        }
+
+        .day-path {
+            font-size: 0.92rem;
+            color: var(--muted);
+        }
+
+        .hint {
+            margin-top: 24px;
+            color: var(--muted);
+            font-size: 0.92rem;
+            border-top: 1px dashed #d6deee;
+            padding-top: 14px;
+        }
+
+        @media (max-width: 600px) {
+            .panel {
+                padding: 22px;
+            }
         }
     </style>
 </head>
 <body>
-    <p>გავხსენი index.html და დავამატე კოდი მხოლოდ ამავე ფაილში, default agent, gpt 4.1, დაამატა +36 ხაზი</p>
-    <img src="./screens/image-1.png" style="width: 1000px;">
-    <hr>
-    
-    <p>გავხსენი ახალი სერსია, default agent, sonnet 4.5, vs code-ში გახსნილი მქონდა index.html, style.css და script.js ფაილები, სონეტმა ცვლილებები შეიტანა მხოლოდ ორ ფაილში: html, css, +69 ხაზი </p>
-    <img src="./screens/image-2.png" style="width: 1000px;">
-    <hr>
+    <main>
+        <section class="panel" aria-label="Daily report navigation">
+            <h1>Daily Report Pages</h1>
+            <p class="today" id="todayDate">Today: </p>
 
-    <p>vs code-ში გახსნილი მქონდა მხოლოდ index.html ფაილი მაგრამ მივეცი პრომპტი რომელსაც ცვლილება უნდა შეეტანა სხვა ფაილებშიც, default agent mode, gpt 5.4, ცვლილებები შეიტანა index.html, script.js და style.css ფაილებში +293, -89</p>
-    <img src="./screens/image-3.png" style="width: 1000px;">
-    <hr>
+            <div class="days-grid" id="daysGrid"></div>
+        </section>
+    </main>
 
-    <p>opus 4.5 შევაქმნევინე ახალი ფაილი და მივეცი keep, +325 -1</p>
-    <img src="./screens/image-4.png" style="width: 1000px;">
-    <hr>
+    <script>
+        const dayFolders = ["may5", "may6"];
 
-    <p>იგივე სესიაში დავარედაქტირებინე ახალი ფაილი რომელიც უკვე გახსნილი ქმონდა vs code-ში, +6 -6 და მივეცი ისევ keep</p>
-    <img src="./screens/image-5.png" style="width: 1000px;">
-    <hr>
+        const formatter = new Intl.DateTimeFormat("en-US", {
+            weekday: "long",
+            year: "numeric",
+            month: "long",
+            day: "numeric"
+        });
+        document.getElementById("todayDate").textContent = `Today: ${formatter.format(new Date())}`;
 
-    <br>
-    <br>
-    <br>
-    <pre class="json-block">
-        {
-            "data": [
-                {
-                "report_start_day": "2026-04-09",
-                "report_end_day": "2026-05-06",
-                "day": "2026-05-06",
-                "enterprise_id": "43565",
-                "user_id": 197094020,
-                "user_login": "gasanidze-tbc",
-                "user_initiated_interaction_count": 8,
-                "code_generation_activity_count": 12,
-                "code_acceptance_activity_count": 1,
-                "totals_by_ide": [
-                    {
-                    "ide": "vscode",
-                    "user_initiated_interaction_count": 8,
-                    "code_generation_activity_count": 12,
-                    "code_acceptance_activity_count": 1,
-                    "loc_suggested_to_add_sum": 6,
-                    "loc_suggested_to_delete_sum": 0,
-                    "loc_added_sum": 302,
-                    "loc_deleted_sum": 11,
-                    "last_known_plugin_version": {
-                        "sampled_at": "2026-05-06T18:26:54.422Z",
-                        "plugin": "copilot-chat",
-                        "plugin_version": "0.46.2"
-                    },
-                    "last_known_ide_version": {
-                        "sampled_at": "2026-05-06T18:26:54.422Z",
-                        "ide_version": "1.118.1"
-                    }
-                    }
-                ],
-                "totals_by_feature": [
-                    {
-                    "feature": "chat_panel_agent_mode",
-                    "user_initiated_interaction_count": 8,
-                    "code_generation_activity_count": 0,
-                    "code_acceptance_activity_count": 0,
-                    "loc_suggested_to_add_sum": 0,
-                    "loc_suggested_to_delete_sum": 0,
-                    "loc_added_sum": 0,
-                    "loc_deleted_sum": 0
-                    },
-                    {
-                    "feature": "code_completion",
-                    "user_initiated_interaction_count": 0,
-                    "code_generation_activity_count": 6,
-                    "code_acceptance_activity_count": 1,
-                    "loc_suggested_to_add_sum": 6,
-                    "loc_suggested_to_delete_sum": 0,
-                    "loc_added_sum": 1,
-                    "loc_deleted_sum": 0
-                    },
-                    {
-                    "feature": "agent_edit",
-                    "user_initiated_interaction_count": 0,
-                    "code_generation_activity_count": 6,
-                    "code_acceptance_activity_count": 0,
-                    "loc_suggested_to_add_sum": 0,
-                    "loc_suggested_to_delete_sum": 0,
-                    "loc_added_sum": 301,
-                    "loc_deleted_sum": 11
-                    }
-                ],
-                "totals_by_language_feature": [
-                    {
-                    "language": "html",
-                    "feature": "code_completion",
-                    "code_generation_activity_count": 6,
-                    "code_acceptance_activity_count": 1,
-                    "loc_suggested_to_add_sum": 6,
-                    "loc_suggested_to_delete_sum": 0,
-                    "loc_added_sum": 1,
-                    "loc_deleted_sum": 0
-                    },
-                    {
-                    "language": "html",
-                    "feature": "agent_edit",
-                    "code_generation_activity_count": 4,
-                    "code_acceptance_activity_count": 0,
-                    "loc_suggested_to_add_sum": 0,
-                    "loc_suggested_to_delete_sum": 0,
-                    "loc_added_sum": 291,
-                    "loc_deleted_sum": 5
-                    },
-                    {
-                    "language": "css",
-                    "feature": "agent_edit",
-                    "code_generation_activity_count": 1,
-                    "code_acceptance_activity_count": 0,
-                    "loc_suggested_to_add_sum": 0,
-                    "loc_suggested_to_delete_sum": 0,
-                    "loc_added_sum": 4,
-                    "loc_deleted_sum": 0
-                    },
-                    {
-                    "language": "scss",
-                    "feature": "agent_edit",
-                    "code_generation_activity_count": 1,
-                    "code_acceptance_activity_count": 0,
-                    "loc_suggested_to_add_sum": 0,
-                    "loc_suggested_to_delete_sum": 0,
-                    "loc_added_sum": 6,
-                    "loc_deleted_sum": 6
-                    },
-                    {
-                    "language": "css",
-                    "feature": "chat_panel_agent_mode",
-                    "code_generation_activity_count": 0,
-                    "code_acceptance_activity_count": 0,
-                    "loc_suggested_to_add_sum": 0,
-                    "loc_suggested_to_delete_sum": 0,
-                    "loc_added_sum": 0,
-                    "loc_deleted_sum": 0
-                    },
-                    {
-                    "language": "html",
-                    "feature": "chat_panel_agent_mode",
-                    "code_generation_activity_count": 0,
-                    "code_acceptance_activity_count": 0,
-                    "loc_suggested_to_add_sum": 0,
-                    "loc_suggested_to_delete_sum": 0,
-                    "loc_added_sum": 0,
-                    "loc_deleted_sum": 0
-                    },
-                    {
-                    "language": "jsonl",
-                    "feature": "chat_panel_agent_mode",
-                    "code_generation_activity_count": 0,
-                    "code_acceptance_activity_count": 0,
-                    "loc_suggested_to_add_sum": 0,
-                    "loc_suggested_to_delete_sum": 0,
-                    "loc_added_sum": 0,
-                    "loc_deleted_sum": 0
-                    }
-                ],
-                "totals_by_language_model": [
-                    {
-                    "language": "css",
-                    "model": "claude-4.5-sonnet",
-                    "code_generation_activity_count": 1,
-                    "code_acceptance_activity_count": 0,
-                    "loc_suggested_to_add_sum": 0,
-                    "loc_suggested_to_delete_sum": 0,
-                    "loc_added_sum": 4,
-                    "loc_deleted_sum": 0
-                    },
-                    {
-                    "language": "html",
-                    "model": "claude-4.5-sonnet",
-                    "code_generation_activity_count": 1,
-                    "code_acceptance_activity_count": 0,
-                    "loc_suggested_to_add_sum": 0,
-                    "loc_suggested_to_delete_sum": 0,
-                    "loc_added_sum": 65,
-                    "loc_deleted_sum": 0
-                    },
-                    {
-                    "language": "html",
-                    "model": "gpt-4.1",
-                    "code_generation_activity_count": 1,
-                    "code_acceptance_activity_count": 0,
-                    "loc_suggested_to_add_sum": 0,
-                    "loc_suggested_to_delete_sum": 0,
-                    "loc_added_sum": 36,
-                    "loc_deleted_sum": 0
-                    },
-                    {
-                    "language": "html",
-                    "model": "gpt-5.3-codex",
-                    "code_generation_activity_count": 1,
-                    "code_acceptance_activity_count": 0,
-                    "loc_suggested_to_add_sum": 0,
-                    "loc_suggested_to_delete_sum": 0,
-                    "loc_added_sum": 14,
-                    "loc_deleted_sum": 0
-                    },
-                    {
-                    "language": "html",
-                    "model": "gpt-5.4",
-                    "code_generation_activity_count": 1,
-                    "code_acceptance_activity_count": 0,
-                    "loc_suggested_to_add_sum": 0,
-                    "loc_suggested_to_delete_sum": 0,
-                    "loc_added_sum": 176,
-                    "loc_deleted_sum": 5
-                    },
-                    {
-                    "language": "scss",
-                    "model": "claude-opus-4.5",
-                    "code_generation_activity_count": 1,
-                    "code_acceptance_activity_count": 0,
-                    "loc_suggested_to_add_sum": 0,
-                    "loc_suggested_to_delete_sum": 0,
-                    "loc_added_sum": 6,
-                    "loc_deleted_sum": 6
-                    },
-                    {
-                    "language": "css",
-                    "model": "claude-opus-4.5",
-                    "code_generation_activity_count": 0,
-                    "code_acceptance_activity_count": 0,
-                    "loc_suggested_to_add_sum": 0,
-                    "loc_suggested_to_delete_sum": 0,
-                    "loc_added_sum": 0,
-                    "loc_deleted_sum": 0
-                    },
-                    {
-                    "language": "jsonl",
-                    "model": "gpt-5.3-codex",
-                    "code_generation_activity_count": 0,
-                    "code_acceptance_activity_count": 0,
-                    "loc_suggested_to_add_sum": 0,
-                    "loc_suggested_to_delete_sum": 0,
-                    "loc_added_sum": 0,
-                    "loc_deleted_sum": 0
-                    }
-                ],
-                "totals_by_model_feature": [
-                    {
-                    "model": "gpt-5.3-codex",
-                    "feature": "chat_panel_agent_mode",
-                    "user_initiated_interaction_count": 3,
-                    "code_generation_activity_count": 0,
-                    "code_acceptance_activity_count": 0,
-                    "loc_suggested_to_add_sum": 0,
-                    "loc_suggested_to_delete_sum": 0,
-                    "loc_added_sum": 0,
-                    "loc_deleted_sum": 0
-                    },
-                    {
-                    "model": "claude-4.5-sonnet",
-                    "feature": "agent_edit",
-                    "user_initiated_interaction_count": 0,
-                    "code_generation_activity_count": 2,
-                    "code_acceptance_activity_count": 0,
-                    "loc_suggested_to_add_sum": 0,
-                    "loc_suggested_to_delete_sum": 0,
-                    "loc_added_sum": 69,
-                    "loc_deleted_sum": 0
-                    },
-                    {
-                    "model": "claude-opus-4.5",
-                    "feature": "chat_panel_agent_mode",
-                    "user_initiated_interaction_count": 2,
-                    "code_generation_activity_count": 0,
-                    "code_acceptance_activity_count": 0,
-                    "loc_suggested_to_add_sum": 0,
-                    "loc_suggested_to_delete_sum": 0,
-                    "loc_added_sum": 0,
-                    "loc_deleted_sum": 0
-                    },
-                    {
-                    "model": "claude-4.5-sonnet",
-                    "feature": "chat_panel_agent_mode",
-                    "user_initiated_interaction_count": 1,
-                    "code_generation_activity_count": 0,
-                    "code_acceptance_activity_count": 0,
-                    "loc_suggested_to_add_sum": 0,
-                    "loc_suggested_to_delete_sum": 0,
-                    "loc_added_sum": 0,
-                    "loc_deleted_sum": 0
-                    },
-                    {
-                    "model": "claude-opus-4.5",
-                    "feature": "agent_edit",
-                    "user_initiated_interaction_count": 0,
-                    "code_generation_activity_count": 1,
-                    "code_acceptance_activity_count": 0,
-                    "loc_suggested_to_add_sum": 0,
-                    "loc_suggested_to_delete_sum": 0,
-                    "loc_added_sum": 6,
-                    "loc_deleted_sum": 6
-                    },
-                    {
-                    "model": "gpt-4.1",
-                    "feature": "agent_edit",
-                    "user_initiated_interaction_count": 0,
-                    "code_generation_activity_count": 1,
-                    "code_acceptance_activity_count": 0,
-                    "loc_suggested_to_add_sum": 0,
-                    "loc_suggested_to_delete_sum": 0,
-                    "loc_added_sum": 36,
-                    "loc_deleted_sum": 0
-                    },
-                    {
-                    "model": "gpt-4.1",
-                    "feature": "chat_panel_agent_mode",
-                    "user_initiated_interaction_count": 1,
-                    "code_generation_activity_count": 0,
-                    "code_acceptance_activity_count": 0,
-                    "loc_suggested_to_add_sum": 0,
-                    "loc_suggested_to_delete_sum": 0,
-                    "loc_added_sum": 0,
-                    "loc_deleted_sum": 0
-                    },
-                    {
-                    "model": "gpt-5.3-codex",
-                    "feature": "agent_edit",
-                    "user_initiated_interaction_count": 0,
-                    "code_generation_activity_count": 1,
-                    "code_acceptance_activity_count": 0,
-                    "loc_suggested_to_add_sum": 0,
-                    "loc_suggested_to_delete_sum": 0,
-                    "loc_added_sum": 14,
-                    "loc_deleted_sum": 0
-                    },
-                    {
-                    "model": "gpt-5.4",
-                    "feature": "agent_edit",
-                    "user_initiated_interaction_count": 0,
-                    "code_generation_activity_count": 1,
-                    "code_acceptance_activity_count": 0,
-                    "loc_suggested_to_add_sum": 0,
-                    "loc_suggested_to_delete_sum": 0,
-                    "loc_added_sum": 176,
-                    "loc_deleted_sum": 5
-                    },
-                    {
-                    "model": "gpt-5.4",
-                    "feature": "chat_panel_agent_mode",
-                    "user_initiated_interaction_count": 1,
-                    "code_generation_activity_count": 0,
-                    "code_acceptance_activity_count": 0,
-                    "loc_suggested_to_add_sum": 0,
-                    "loc_suggested_to_delete_sum": 0,
-                    "loc_added_sum": 0,
-                    "loc_deleted_sum": 0
-                    }
-                ],
-                "used_agent": true,
-                "used_chat": true,
-                "loc_suggested_to_add_sum": 6,
-                "loc_suggested_to_delete_sum": 0,
-                "loc_added_sum": 302,
-                "loc_deleted_sum": 11,
-                "used_cli": false,
-                "used_copilot_coding_agent": false,
-                "used_copilot_cloud_agent": false
-                }
-            ]
-        }
-    </pre>
+        const daysGrid = document.getElementById("daysGrid");
+
+        dayFolders.forEach((folder) => {
+            const link = document.createElement("a");
+            link.href = `${folder}/index.html`;
+            link.className = "day-link";
+
+            link.innerHTML = `
+                <article class="day-card">
+                    <span class="day-name">${folder}</span>
+                    <span class="day-path">Open ${folder}/index.html</span>
+                </article>
+            `;
+
+            daysGrid.appendChild(link);
+        });
+    </script>
 </body>
 </html>
